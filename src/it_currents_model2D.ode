@@ -1,0 +1,73 @@
+# Analysis of the role of the low threshold currents IT and Ih in intrinsic
+# delta oscillations of thalamocortical neurons
+
+# Y. Amarillo, G. Mato and M. Nadal 2015
+# using calcium fixed in concentration
+
+# differential equations
+v'=(I/1000 - Ikl - Inal - It + Istep(t))/c
+h'=(hinf(v)-h)/tauh(v)
+
+# injected current: current is a step function with amplitude ip
+par I = 0 # injected in picoAmps
+par ip=0.0, t_on=500, t_off=3500
+Istep(t) = ip*heav(t-t_on)*heav(t_off-t)
+
+# passive leaks (K and Na leaks)
+#par gkl=1e-5 *1e6 # S/cm^2 to microS/cm^2
+par gkl=10
+par Ekl=-100
+# par gnal=3e-6 *1e6 S/cm^2 to microS/cm^2
+par gnal=3
+par Enal=0
+Ikl=gkl*(v-Ekl)*S
+Inal=gnal*(v-Enal)*S
+
+# T Current
+It = pt*h*m^2*gfunc*S
+# factor of 1000 for millivolts:
+xi = v*faraday*z/(rgas*(tabs0+temp)*1000)
+# liter to cm^3:
+gfunc = z*1e-3*faraday*xi*(cai-cao*exp(-xi))/(1-exp(-xi))
+m=minf(v)
+
+par v_halfmT=-53
+par v_halfhT=-75
+par v_tauh1=-461
+par v_tauh2=-16
+
+minf(v)=1/(1+exp(-(v-v_halfmT)/6.2))
+hinf(v)=1/(1+exp((v-v_halfhT)/4))
+# temperature correction for 36 celsius q10m=5,q10h=3
+tauh(v)=if(v<(-75))then((exp((v-v_tauh1)/66.6))/3)else((28+exp(-(v-v_tauh2)/10.5))/3)
+
+# parameters and constants
+#par S=20000 * 1e-8 # microns to cm
+par S=2e-4
+#par pt=7e-5 * 1e9 # cms to 1e-9cm/s (correct for nanoamps)
+par pt=7e4
+par cai=0.05e-6, cao=2e-3, temp=36, c=0.2
+
+# C/mol
+number faraday=96485
+
+# J/Kmol
+number rgas=8.3147
+
+number tabs0=273.15, z=2
+
+# aux variables
+# aux i_t=it
+# aux i_kl=Ikl
+# aux i_nal=Inal
+
+#v(0)=-65
+#h(0)=0.01
+
+@ total=4000, dt=.05,
+@ atoler=1e-4, toler=1e-5, bound=1000, nmesh=1000
+#@ xhi=4000, ylo=-120,yhi=50
+@ xlo=-100, xhi=111, ylo=-1, yhi=1, xp=v, yp=h
+@ maxstor=100000
+#init v=-65
+done
